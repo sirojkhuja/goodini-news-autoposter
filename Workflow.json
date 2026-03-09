@@ -1,0 +1,396 @@
+{
+  "name": "Тестовое задание",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "news-autoposter",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "9e2b43ab-9f03-4aa6-96e0-b171f605119a",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -928,
+        48
+      ],
+      "webhookId": "5d528dd5-bcb0-406f-bee0-de8e9ef90993"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "url-check",
+              "leftValue": "={{ $json.body.url }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            },
+            {
+              "id": "1550c3ea-39f1-4410-b16c-c6cd9edbe0c9",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "a45bbcc2-2fe1-416e-a435-f13386ddd338",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c798a8b4-58a2-4cac-ac30-4814f9f9517f",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -704,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.OPENAI_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "whisper-1"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "language",
+              "value": "ru"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "afb9c9c4-defa-4dd5-abf2-458ec440a4f1",
+      "name": "Transcribe (Whisper)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        352,
+        -240
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "value": "public"
+        },
+        "table": {
+          "value": "news_posts"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false,
+          "values": {
+            "mappings": [
+              {
+                "columnName": "source_url",
+                "value": "={{ $('Webhook Trigger').item.json.body.url }}"
+              },
+              {
+                "columnName": "transcript",
+                "value": "={{ $('Transcribe (Whisper)').item.json.text }}"
+              },
+              {
+                "columnName": "post_text",
+                "value": "={{ $json.message.content }}"
+              },
+              {
+                "columnName": "status",
+                "value": "published"
+              },
+              {
+                "columnName": "created_at",
+                "value": "={{ $now.toISO() }}"
+              }
+            ]
+          }
+        },
+        "options": {}
+      },
+      "id": "8483bfa8-91ea-4671-8e15-a695eaf78879",
+      "name": "Save to PostgreSQL",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        960,
+        -256
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "mIqwhhc5jdfyxGE6",
+          "name": "Pet Projects"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "={{ $('Generate Post (AI)').item.json.message.content }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "b747e449-1d8b-40c7-82da-f7810fe89eee",
+      "name": "Send to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1168,
+        -256
+      ],
+      "webhookId": "f71435a6-b377-4bb6-89a1-e7a93f19ec96",
+      "credentials": {
+        "telegramApi": {
+          "id": "TdP7uYhXx8Ljxshr",
+          "name": "Youtube downloader"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## После того, как Вы развернули n8n, заполнить недостающие ноды или дополните воркфлоу, если этого требует ТЗ или у Вас есть другой подход\n\n## Оставить нотисы, объяснить решение.\n\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/components/sticky-notes/)",
+        "height": 336,
+        "width": 400,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1232,
+        -304
+      ],
+      "id": "835f37f3-fbfc-4565-9c2c-bd0754ce6082",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Download Audio (yt-dlp)",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        -96
+      ],
+      "id": "8783d7d2-249b-41ed-a176-1188bf513c92",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Error → Alert",
+      "typeVersion": 1,
+      "position": [
+        352,
+        64
+      ],
+      "id": "6510ee21-7cfc-4119-8273-911c47c85f89"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Generate Post (AI)",
+      "typeVersion": 1,
+      "position": [
+        672,
+        -256
+      ],
+      "id": "473c7a7b-8a71-42b5-85a0-ae522e5a25e6"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Respond success",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        -256
+      ],
+      "id": "5da5aab2-0a89-4eba-a8a1-59e67a8db32d"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Error → Alert1",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        176
+      ],
+      "id": "f699810c-441f-4728-a334-68af10800bd2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Download Audio (yt-dlp)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error → Alert1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe (Whisper)": {
+      "main": [
+        [
+          {
+            "node": "Generate Post (AI)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error → Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to PostgreSQL": {
+      "main": [
+        [
+          {
+            "node": "Send to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to Telegram": {
+      "main": [
+        [
+          {
+            "node": "Respond success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Audio (yt-dlp)": {
+      "main": [
+        [
+          {
+            "node": "Transcribe (Whisper)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error → Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error → Alert": {
+      "main": [
+        []
+      ]
+    },
+    "Generate Post (AI)": {
+      "main": [
+        [
+          {
+            "node": "Save to PostgreSQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "dadb8f2b-e663-4945-af09-25dc9a8cc308",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "db57106b4a771a7fbc5e46a5ac3db767f46156e00ecd689ae3528d3bb11bcb19"
+  },
+  "id": "mSxBUM4MtVd8qqnk",
+  "tags": [
+    {
+      "name": "тестовое-задание",
+      "id": "n0Y74dIZYwwvIEcr",
+      "updatedAt": "2026-03-02T18:24:50.377Z",
+      "createdAt": "2026-03-02T18:24:50.377Z"
+    }
+  ]
+}
