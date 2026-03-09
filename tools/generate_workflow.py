@@ -324,7 +324,7 @@ return {
         IDS["validate_webhook"],
         "Validate Webhook Input",
         "={{ $json.validation_error }}",
-        {"type": "string", "operation": "isEmpty"},
+        {"type": "string", "operation": "empty"},
         position=[-560, 40],
     ),
     respond_node(
@@ -918,8 +918,8 @@ connections = {
     "Parse Duplicate Result": {"main": [[connection("Is Duplicate?")]]},
     "Is Duplicate?": {
         "main": [
-            [connection("Download Audio (yt-dlp)")],
             [connection("Is Webhook Duplicate?")],
+            [connection("Download Audio (yt-dlp)")],
         ]
     },
     "Is Webhook Duplicate?": {

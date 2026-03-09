@@ -68,7 +68,7 @@
               "rightValue": "",
               "operator": {
                 "type": "string",
-                "operation": "isEmpty"
+                "operation": "empty"
               }
             }
           ],
@@ -1251,14 +1251,14 @@
       "main": [
         [
           {
-            "node": "Download Audio (yt-dlp)",
+            "node": "Is Webhook Duplicate?",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Is Webhook Duplicate?",
+            "node": "Download Audio (yt-dlp)",
             "type": "main",
             "index": 0
           }
