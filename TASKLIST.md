@@ -10,4 +10,4 @@ Status legend: `PENDING`, `IN PROGRESS`, `DONE`
 - [x] `DONE` T6 Add bonus feature: deduplication with `409` response
 - [x] `DONE` T7 Add bonus feature: cron + RSS ingestion path
 - [x] `DONE` T8 Add `README.md` with architecture, setup, verification, and demo/test instructions
-- [ ] `PENDING` T9 Run final validation suite, confirm repository state, and perform final cleanup for submission
+- [x] `DONE` T9 Run final validation suite, confirm repository state, and perform final cleanup for submission
