@@ -9,5 +9,5 @@ Status legend: `PENDING`, `IN PROGRESS`, `DONE`
 - [x] `DONE` T5 Add reliability features: retries, error logging, Telegram error alerts, and temp-file cleanup
 - [x] `DONE` T6 Add bonus feature: deduplication with `409` response
 - [x] `DONE` T7 Add bonus feature: cron + RSS ingestion path
-- [ ] `PENDING` T8 Add `README.md` with architecture, setup, verification, and demo/test instructions
+- [x] `DONE` T8 Add `README.md` with architecture, setup, verification, and demo/test instructions
 - [ ] `PENDING` T9 Run final validation suite, confirm repository state, and perform final cleanup for submission
