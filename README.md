@@ -1,84 +1,86 @@
 # Goodini News Autoposter
 
-Test-task implementation for an `n8n Automation Engineer` assignment.
+Language: [Русский](README.md) | [English](README.en.md)
 
-The project delivers:
+Реализация тестового задания на позицию `n8n Automation Engineer`.
 
-- Dockerized `n8n` + PostgreSQL stack
-- Webhook-based news autoposter workflow
-- Audio download with `yt-dlp`
-- Whisper transcription
-- LLM-based Telegram post generation
-- PostgreSQL persistence
-- Telegram delivery
-- Error logging, alerts, retries, and temp-file cleanup
-- Bonus features: deduplication and RSS/schedule ingestion
+Проект включает:
 
-## Repository Layout
+- Docker-стек с `n8n` и PostgreSQL
+- workflow автопостинга новостей через webhook
+- загрузку аудио через `yt-dlp`
+- транскрибацию через Whisper
+- генерацию Telegram-поста через LLM
+- сохранение данных в PostgreSQL
+- отправку сообщений в Telegram
+- логирование ошибок, алерты, ретраи и очистку временных файлов
+- бонусные функции: дедупликация и ingestion через RSS/расписание
 
-- `docker-compose.yml`: local stack definition
-- `Dockerfile.n8n`: custom `n8n` image with `yt-dlp`, `ffmpeg`, Python, and PostgreSQL client
-- `.env.example`: environment variable template
-- `init.sql`: creates `news_posts` and `error_logs`
-- `Workflow.json`: importable workflow definition
-- `tools/generate_workflow.py`: source-of-truth generator for `Workflow.json`
-- `scripts/download_audio.sh`: safe wrapper around `yt-dlp`
-- `scripts/db_ops.py`: database helper used by workflow shell steps
+## Структура Репозитория
 
-## What Was Fixed
+- `docker-compose.yml`: локальный стек
+- `Dockerfile.n8n`: кастомный образ `n8n` с `yt-dlp`, `ffmpeg`, Python и PostgreSQL client
+- `.env.example`: шаблон переменных окружения
+- `init.sql`: создание таблиц `news_posts` и `error_logs`
+- `Workflow.json`: импортируемое описание workflow
+- `tools/generate_workflow.py`: исходный генератор для `Workflow.json`
+- `scripts/download_audio.sh`: безопасная обертка над `yt-dlp`
+- `scripts/db_ops.py`: helper-скрипт для операций с БД из workflow
 
-Infrastructure fixes:
+## Что Было Исправлено
 
-- fixed broken `n8n -> PostgreSQL` host wiring in Compose
-- added persistent `n8n` storage
-- replaced the old env template with a complete `.env.example`
-- pinned `n8n` to `1.82.3` because the current `latest` image is hardened and no longer allows package installation
-- corrected the `n8n` healthcheck to use `127.0.0.1`
+Инфраструктура:
 
-Workflow fixes:
+- исправлена сломанная связка `n8n -> PostgreSQL` в Compose
+- добавлено постоянное хранилище для `n8n`
+- старый шаблон env заменен на полный `.env.example`
+- `n8n` зафиксирован на версии `1.82.3`, потому что актуальный `latest`-образ уже не позволяет ставить пакеты так, как требуется в задании
+- исправлен healthcheck `n8n`, теперь он использует `127.0.0.1`
 
-- replaced all placeholder `No Op` nodes
-- fixed webhook validation and proper `400` response
-- implemented retries and explicit error branches
-- removed dependence on reviewer-local n8n credentials by using env vars and helper scripts
+Workflow:
 
-## Workflow Design
+- заменены все placeholder-узлы `No Op`
+- исправлена валидация webhook и корректный ответ `400`
+- добавлены ретраи и явные error-ветки
+- убрана зависимость от локальных reviewer credentials в `n8n`: интеграции работают через env vars и helper-скрипты
 
-Main webhook path:
+## Архитектура Workflow
+
+Основной webhook-сценарий:
 
 1. `POST /webhook/news-autoposter`
-2. Validate input `{ "url": "...", "id": "..." }`
-3. Deduplicate by `source_url`
-4. Download audio with `yt-dlp`
-5. Read binary file
-6. Transcribe with Whisper (`ru`)
-7. Generate Telegram post with OpenAI
-8. Save draft row in PostgreSQL
-9. Send to Telegram
-10. Update row status to `published`
-11. Cleanup temp file
-12. Respond to webhook
+2. Валидация входных данных `{ "url": "...", "id": "..." }`
+3. Дедупликация по `source_url`
+4. Загрузка аудио через `yt-dlp`
+5. Чтение бинарного файла
+6. Транскрибация через Whisper (`ru`)
+7. Генерация Telegram-поста через OpenAI
+8. Сохранение draft-записи в PostgreSQL
+9. Отправка в Telegram
+10. Обновление статуса записи на `published`
+11. Очистка временного файла
+12. Ответ webhook-запросу
 
-Reliability path:
+Путь надежности:
 
-- Whisper retries: `5s`, `15s`, `30s`
-- OpenAI generation retries: `5s`, `15s`, `30s`
-- Telegram delivery retry: `5s`
-- all normalized failures:
-  - write to `error_logs`
-  - send Telegram error alert
-  - cleanup temp file
-  - return structured webhook error response
+- ретраи Whisper: `5s`, `15s`, `30s`
+- ретраи генерации OpenAI: `5s`, `15s`, `30s`
+- ретрай отправки в Telegram: `5s`
+- каждая нормализованная ошибка:
+  - записывается в `error_logs`
+  - отправляет Telegram-алерт
+  - запускает очистку временного файла
+  - возвращает структурированный webhook-ответ с ошибкой
 
-Bonus path:
+Бонусный путь:
 
 - `Schedule Trigger` + `RSS Read`
-- RSS items are normalized into the same shared pipeline as webhook requests
-- duplicate RSS items are skipped without webhook response
+- RSS-элементы нормализуются в тот же pipeline, что и webhook
+- дубликаты из RSS тихо пропускаются без webhook-ответа
 
-## Environment Variables
+## Переменные Окружения
 
-Required:
+Обязательные:
 
 - `POSTGRES_USER`
 - `POSTGRES_PASSWORD`
@@ -90,44 +92,45 @@ Required:
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_CHAT_ID`
 
-Useful local defaults:
+Полезные локальные значения по умолчанию:
 
 - `WEBHOOK_URL=http://localhost:5678/`
 - `N8N_EDITOR_BASE_URL=http://localhost:5678`
 - `GENERIC_TIMEZONE=Asia/Tashkent`
-- `RSS_FEED_URL=<your RSS feed>`
+- `RSS_FEED_URL=<ваш RSS feed>`
 
-## Local Setup
+## Локальный Запуск
 
-1. Create `.env` from `.env.example`.
-2. Fill real OpenAI and Telegram credentials.
-3. Start the stack:
+1. Создать `.env` из `.env.example`.
+2. Заполнить реальные OpenAI и Telegram credentials.
+3. Поднять стек:
 
 ```bash
 docker compose up -d --build
 ```
 
-4. Open `http://localhost:5678`.
-5. Import `Workflow.json` in the n8n UI.
-6. Activate the workflow.
+4. Открыть `http://localhost:5678`.
+5. Импортировать `Workflow.json` в UI `n8n`.
+6. Активировать workflow.
 
-## Local Verification
+## Локальная Проверка
 
-Validated locally:
+Локально уже проверено:
 
 - `docker compose config`
 - `docker compose up -d --build`
-- `n8n` health: `http://localhost:5678/healthz`
-- workflow import into running `n8n`
-- webhook validation path
-- duplicate detection path
-- download failure path
-- error logging into PostgreSQL
-- temp-file cleanup in `/tmp/news-autoposter`
+- healthcheck `n8n`: `http://localhost:5678/healthz`
+- импорт workflow в работающий `n8n`
+- ветка валидации webhook
+- ветка дедупликации
+- ветка ошибки загрузки
+- логирование ошибок в PostgreSQL
+- очистка временных файлов в `/tmp/news-autoposter`
+- реальный happy-path с рабочими OpenAI и Telegram credentials
 
-Smoke-test examples:
+Примеры smoke-тестов:
 
-Missing URL:
+Отсутствует URL:
 
 ```bash
 curl -i -X POST http://localhost:5678/webhook/news-autoposter \
@@ -135,9 +138,9 @@ curl -i -X POST http://localhost:5678/webhook/news-autoposter \
   -d '{}'
 ```
 
-Expected: `400 Bad Request`
+Ожидается: `400 Bad Request`
 
-Duplicate URL:
+Дубликат URL:
 
 ```bash
 curl -i -X POST http://localhost:5678/webhook/news-autoposter \
@@ -145,9 +148,9 @@ curl -i -X POST http://localhost:5678/webhook/news-autoposter \
   -d '{"url":"https://example.com","id":"dup-1"}'
 ```
 
-Expected: `409 Conflict`
+Ожидается: `409 Conflict`
 
-Invalid/non-downloadable URL:
+Невалидный или недоступный URL:
 
 ```bash
 curl -i -X POST http://localhost:5678/webhook/news-autoposter \
@@ -155,23 +158,33 @@ curl -i -X POST http://localhost:5678/webhook/news-autoposter \
   -d '{"url":"https://nonexistent-123.invalid/video","id":"bad-url"}'
 ```
 
-Expected: `422 Unprocessable Entity` and a row in `error_logs`
+Ожидается: `422 Unprocessable Entity` и запись в `error_logs`
 
-## Important Note About Live Integrations
+Реальный end-to-end пример:
 
-The full happy-path execution requires real credentials:
+```bash
+curl -i -X POST http://localhost:5678/webhook/news-autoposter \
+  -H 'Content-Type: application/json' \
+  -d '{"url":"https://www.youtube.com/watch?v=dGLtsqaExSo","id":"demo-live-run"}'
+```
 
-- OpenAI for Whisper + LLM generation
-- Telegram Bot API for message delivery and error alerts
+Ожидается: `201 Created`, запись со статусом `published` в `news_posts` и сообщение в Telegram
 
-The repository is fully wired for those integrations, but live end-to-end success cannot be verified without valid secrets.
+## Важное Замечание По Live-Интеграциям
 
-## Workflow Generation
+Для полного happy-path нужны реальные credentials:
 
-`Workflow.json` is generated from:
+- OpenAI для Whisper и генерации поста
+- Telegram Bot API для отправки сообщений и error-alerts
+
+Репозиторий полностью подготовлен для этих интеграций, но полноценный live-success нельзя проверить без реальных секретов.
+
+## Генерация Workflow
+
+`Workflow.json` генерируется командой:
 
 ```bash
 python3 tools/generate_workflow.py
 ```
 
-This makes the workflow easier to maintain than editing large escaped JSON by hand.
+Так workflow поддерживать проще, чем редактировать большой JSON с экранированными строками вручную.
