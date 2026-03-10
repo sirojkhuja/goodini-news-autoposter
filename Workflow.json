@@ -1589,9 +1589,7 @@
             "node": "Respond Success?",
             "type": "main",
             "index": 0
-          }
-        ],
-        [
+          },
           {
             "node": "Cleanup Temp File",
             "type": "main",

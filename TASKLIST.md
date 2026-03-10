@@ -11,3 +11,4 @@ Status legend: `PENDING`, `IN PROGRESS`, `DONE`
 - [x] `DONE` T7 Add bonus feature: cron + RSS ingestion path
 - [x] `DONE` T8 Add `README.md` with architecture, setup, verification, and demo/test instructions
 - [x] `DONE` T9 Run final validation suite, confirm repository state, and perform final cleanup for submission
+- [x] `DONE` T10 Fix live smoke-test regression on success-path temp-file cleanup, revalidate happy path, and push the patch

@@ -1030,8 +1030,7 @@ connections = {
     },
     "Prepare Success Result": {
         "main": [
-            [connection("Respond Success?")],
-            [connection("Cleanup Temp File")],
+            [connection("Respond Success?"), connection("Cleanup Temp File")],
         ]
     },
     "Respond Success?": {
